@@ -7,11 +7,11 @@ Install `wagtail-import-export-tool` using PIP.
 pip install wagtail-import-export-tool
 ```
 
-Add `wagtailimportexporttool` to your Django project settings.
+Add `wagtailimportexport` to your Django project settings.
 ```
 INSTALLED_APPS = [
     ...
-    'wagtailimportexporttool',
+    'wagtailimportexport',
     ...
 ]
 ```
