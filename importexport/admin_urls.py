@@ -5,7 +5,7 @@ from importexport import views
 
 app_name = 'importexport'
 urlpatterns = [
-    url(r'^import/$', views.imports, name='import'),
-    url(r'^export/$', views.exports, name='export'),
+    url(r'^import-page/$', views.import_page, name='import-page'),
+    url(r'^export-page/$', views.export_page, name='export-page'),
     url(r'^$', views.index, name='index'),
 ]

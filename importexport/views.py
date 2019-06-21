@@ -11,14 +11,14 @@ def index(request):
     """
     return render(request, 'importexport/index.html')
 
-def imports(request):
+def import_page(request):
     """
     View for the import page.
     """
-    return render(request, 'importexport/import.html')
+    return render(request, 'importexport/import-page.html')
 
-def exports(request):
+def export_page(request):
     """
     View for the export page.
     """
-    return render(request, 'importexport/export.html')
+    return render(request, 'importexport/export-page.html')
