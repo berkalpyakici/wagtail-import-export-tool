@@ -9,16 +9,16 @@ def index(request):
     View for main menu of the Import/Export tool. Provides a list
     of features.
     """
-    return render(request, 'importexport/index.html')
+    return render(request, 'wagtailimportexport/index.html')
 
 def import_page(request):
     """
     View for the import page.
     """
-    return render(request, 'importexport/import-page.html')
+    return render(request, 'wagtailimportexport/import-page.html')
 
 def export_page(request):
     """
     View for the export page.
     """
-    return render(request, 'importexport/export-page.html')
+    return render(request, 'wagtailimportexport/export-page.html')

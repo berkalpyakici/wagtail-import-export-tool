@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from importexport import functions
+from wagtailimportexport import functions
 
 
 class TestNullPKs(TestCase):

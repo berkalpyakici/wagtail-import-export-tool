@@ -1,9 +1,9 @@
 from django.conf.urls import url
 
-from importexport import views
+from wagtailimportexport import views
 
 
-app_name = 'importexport'
+app_name = 'wagtailimportexport'
 urlpatterns = [
     url(r'^import-page/$', views.import_page, name='import-page'),
     url(r'^export-page/$', views.export_page, name='export-page'),

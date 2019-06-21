@@ -2,7 +2,7 @@ from django.apps import AppConfig
 from django.utils.translation import ugettext_lazy as _
 
 
-class ImportExportAppConfig(AppConfig):
-    name = 'importexport'
-    label = 'importexport'
+class WagtailImportExportAppConfig(AppConfig):
+    name = 'wagtailimportexport'
+    label = 'wagtailimportexport'
     verbose_name = _("Import/Export Tool")
