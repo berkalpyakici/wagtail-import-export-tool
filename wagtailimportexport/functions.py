@@ -1,3 +1,5 @@
+import tempfile
+
 def null_pks():
     """
     Nullifies primary keys within all supplied fields.
@@ -28,9 +30,23 @@ def zip_contents():
     """
     pass
 
-def unzip_contents():
+def unzip_contents(zip_contents):
     """
     Extracts all items in the zip archive and returns a mapping
     of the contents, as well as their location in tempdir.
+
+    Arguments:
+    zip_contents -- Zip file that is in memory.
+
+    Returns:
+    Map of the extracted files.
     """
-    pass
+
+    # Create a temporary directory.
+    tempdir = tempfile.mkdtemp()
+
+    # Extract all contents.
+    zip_contents.extractall(tempdir)
+
+    # Return the mapping of all extracted members.
+    return {member: tempdir+'/'+member for member in zip_contents.namelist()}
