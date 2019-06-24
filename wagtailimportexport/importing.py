@@ -12,6 +12,7 @@ from wagtail.documents.models import Document
 
 from wagtailimportexport import functions
 
+
 def import_page(uploaded_archive, parent_page):
     """
     Imports uploaded_archive as children of parent_page.

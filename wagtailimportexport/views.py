@@ -2,10 +2,12 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.translation import ungettext
+from django.http import HttpResponse
 
 from wagtail.admin import messages
 
 from wagtailimportexport import forms, importing, exporting
+
 
 def index(request):
     """
@@ -69,20 +71,28 @@ def export_page(request):
         form = forms.ExportPage(request.POST)
 
         if form.is_valid():
+            export_file = exporting.export_page(settings=form.cleaned_data)
 
-            # Read fields on the submitted form.
-            content_data = {
-                'pages': exporting.export_page(settings=form.cleaned_data)
-            }
+            if export_file:
+                # Grab ZIP file from in-memory, make response with correct MIME-type
+                response = HttpResponse(export_file.getvalue(), content_type = "application/x-zip-compressed")
+                
+                # ..and correct content-disposition
+                response['Content-Disposition'] = 'attachment; filename=wagtail-export.zip'
 
-            filedata = functions.zip_contents(content_data)
+                return response
+            else:
+                form = forms.ExportPage()
 
-            # Grab ZIP file from in-memory, make response with correct MIME-type
-            response = HttpResponse(filedata.getvalue(), content_type = "application/x-zip-compressed")
-            # ..and correct content-disposition
-            response['Content-Disposition'] = 'attachment; filename=content.zip'
+                messages.error(
+                    request, "Failed to generate an export file. Please refer to the logs for further details."
+                )
 
-            return response
+                # Redirect client to form.
+                return render(request, 'wagtailimportexport/export-page.html', {
+                    'form': form,
+                })
+
     else:
         form = forms.ExportPage()
 

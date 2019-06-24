@@ -67,21 +67,21 @@ class ExportPage(forms.Form):
         help_text=_("If True, user fields (owner in pages, *user_id in images) will be nulled. Leave checked if exported archive will be imported to a different environment."),
     )
 
-    null_images = forms.BooleanField(
+    export_images = forms.BooleanField(
         initial=True,
         required=False,
         label=_("Export Images"),
         help_text=_("If True, image references will be nulled and images that are used on the page will be exported along with the rest of the content. Leave checked if exported archive will be imported to a different environment."),
     )
 
-    null_docs = forms.BooleanField(
+    export_documents = forms.BooleanField(
         initial=True,
         required=False,
         label=_("Export Documents"),
         help_text=_("If True, document references will be nulled and documents that are used on the page will be exported along with the rest of the content. Leave checked if exported archive will be imported to a different environment."),
     )
 
-    null_snippets = forms.BooleanField(
+    export_snippets = forms.BooleanField(
         initial=True,
         required=False,
         label=_("Export Snippets"),
