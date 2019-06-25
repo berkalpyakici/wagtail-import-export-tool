@@ -3,6 +3,7 @@ import zipfile
 import os
 import io
 import json
+import logging
 
 from django.core.files.storage import get_storage_class
 from django.core.serializers.json import DjangoJSONEncoder
@@ -166,8 +167,13 @@ def zip_contents(page_contents):
                         continue
                     
                     filename = image_def['file']['name']
-                    with file_storage.open(filename, 'rb') as f:
-                        zf.writestr(filename, f.read())
+
+                    try:
+                        with file_storage.open(filename, 'rb') as f:
+                            zf.writestr(filename, f.read())
+                    except FileNotFoundError:
+                        logging.error("File "+filename+" is not found on local file storage and was not exported.")
+
                 
                 # Export all the documents.
                 for doc_def in page['documents'].values():
@@ -175,8 +181,12 @@ def zip_contents(page_contents):
                         continue
                     
                     filename = doc_def['file']
-                    with file_storage.open(filename, 'rb') as f:
-                        zf.writestr(filename, f.read())
+
+                    try:
+                        with file_storage.open(filename, 'rb') as f:
+                            zf.writestr(filename, f.read())
+                    except FileNotFoundError:
+                        logging.error("File "+filename+" is not found on local file storage and was not exported.")
         
         with open(zfname, 'rb') as zf:
             fd = zf.read()

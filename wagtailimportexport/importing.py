@@ -3,8 +3,13 @@ import json
 import logging
 from zipfile import ZipFile
 
+from django.apps import apps
 from django.core.files.images import ImageFile
 from django.core.files.base import File
+from django.contrib.contenttypes.models import ContentType
+from django.db import models, transaction, IntegrityError
+
+from modelcluster.models import get_all_child_relations
 
 from wagtail.core.models import Page
 from wagtail.images.models import Image
@@ -40,15 +45,24 @@ def import_page(uploaded_archive, parent_page):
             with zf.open('content.json') as mf:
                 contents = json.loads(mf.read().decode('utf-8-sig'))
 
+                # First create the base Page records; these contain no foreign keys, so this allows us to
+                # build a complete mapping from old IDs to new IDs before we go on to importing the
+                # specific page models, which may require us to rewrite page IDs within foreign keys / rich
+                # text / streamfields.
+                page_content_type = ContentType.objects.get_for_model(Page)
+
                 # Unzip all the files in the zip directory.
                 contents_mapping = functions.unzip_contents(zf)
 
                 # Get the list of pages to skip.
-                existing_pages = list_existing_pages(contents['pages'])
-                existing_pages = []
+                existing_pages = list_existing_pages(contents)
+                
+                # Dictionaries to store original paths.
+                pages_by_original_path = {}
+                pages_by_original_id = {}
 
                 # Loop through all the pages.
-                for (i, page_record) in enumerate(contents['pages']):
+                for (i, page_record) in enumerate(contents):
 
                     new_field_datas = {}
 
@@ -87,14 +101,65 @@ def import_page(uploaded_archive, parent_page):
                             filedata["file"]["name"], contents_mapping[filedata["file"]["name"]], Image)
 
                         new_field_datas[fieldname] = local_file_id
-        
+
+                    # Overwrite image and document IDs
+                    for (field, new_value) in new_field_datas.items():
+                        page_record['content'][field] = new_value
+                
+                    # Create page instance.
+                    page = Page.from_serializable_data(page_record['content'])
+
+                    original_path = page.path
+                    original_id = page.id
+
+                    # Clear id and treebeard-related fields so that they get reassigned when we save via add_child
+                    page.id = None
+                    page.path = None
+                    page.depth = None
+                    page.numchild = 0
+                    page.url_path = None
+                    page.content_type = page_content_type
+
+                    # Handle children of the imported page(s).
+                    if i == 0:
+                        parent_page.add_child(instance=page)
+                    else:
+                        # Child pages are created in the same sibling path order as the
+                        # source tree because the export is ordered by path
+                        parent_path = original_path[:-(Page.steplen)]
+                        pages_by_original_path[parent_path].add_child(instance=page)
+
+                    pages_by_original_path[original_path] = page
+                    pages_by_original_id[original_id] = page
+
+                    # Get the page model of the source page by app_label and model name
+                    # The content type ID of the source page is not in general the same
+                    # between the source and destination sites but the page model needs
+                    # to exist on both.
+                    try:
+                        model = apps.get_model(page_record['app_label'], page_record['model'])
+                    except LookupError:
+                        logging.error("Importing file failed because the model "+page_record['model']+" does not exist on this environment.")
+                        return (0, 1, "Importing file failed because the model "+page_record['model']+" does not exist on this environment.")
+
+                    specific_page = model.from_serializable_data(page_record['content'], check_fks=True, strict_fks=False)
+
+                    base_page = pages_by_original_id[specific_page.id]
+                    specific_page.page_ptr = base_page
+                    specific_page.__dict__.update(base_page.__dict__)
+                    specific_page.content_type = ContentType.objects.get_for_model(model)
+                    update_page_references(specific_page, pages_by_original_id)
+                    specific_page.save()
+
+            return (len(contents), len(existing_pages), "")
+
         except LookupError as e:
             # If content.json does not exist, then return the error,
             # and terminate the import_page.
             logging.error("Importing file failed because file does not exist: "+str(e))
             return (0, 1, "File does not exist: "+str(e))
     
-    return 1, 2, "Imported: Accounting 1, Accounting 2"
+    return (0, 1, "")
 
 def list_existing_pages(pages):
     """
@@ -166,24 +231,55 @@ def create_fileobject(title, uploaded_file, objtype):
     otherwise None.
     """
 
-    with open(uploaded_file, 'rb') as mf:
+    try:
+        with open(uploaded_file, 'rb') as mf:
 
-        # Create the file object based on objtype.
-        if objtype == File:
-            filedata = File(mf)
-        elif objtype == Image:
-            filedata = ImageFile(mf)
-        else:
-            return None
+            # Create the file object based on objtype.
+            if objtype == File:
+                filedata = File(mf)
+            elif objtype == Image:
+                filedata = ImageFile(mf)
+            else:
+                return None
 
-        try:
-            with transaction.atomic():
-                # Create the object and return the ID.
-                localobj = objtype.objects.create(file=filedata, title=title)
-                return localobj.id
+            try:
+                with transaction.atomic():
+                    # Create the object and return the ID.
+                    localobj = objtype.objects.create(file=filedata, title=title)
+                    return localobj.id
 
-        except IntegrityError:
-            logging.error("Integrity error while uploading a file:", title)
-            return None
-
+            except IntegrityError:
+                logging.error("Integrity error while uploading a file:", title)
+                return None
+    except FileNotFoundError:
+        logging.error("File "+uploaded_file+" is not found on imported archive, skipping.")
+    
     return None
+
+def update_page_references(model, pages_by_original_id):
+    """
+
+    """
+
+    for field in model._meta.get_fields():
+        if isinstance(field, models.ForeignKey) and issubclass(field.related_model, Page):
+            linked_page_id = getattr(model, field.attname)
+            try:
+                # see if the linked page is one of the ones we're importing
+                linked_page = pages_by_original_id[linked_page_id]
+            except KeyError:
+                # any references to pages outside of the import should be left unchanged
+                continue
+
+            # update fk to the linked page's new ID
+            setattr(model, field.attname, linked_page.id)
+
+    # update references within inline child models, including the ParentalKey pointing back
+    # to the page
+    for rel in get_all_child_relations(model):
+        for child in getattr(model, rel.get_accessor_name()).all():
+            # reset the child model's PK so that it will be inserted as a new record
+            # rather than updating an existing one
+            child.pk = None
+            # update page references on the child model, including the ParentalKey
+            update_page_references(child, pages_by_original_id)
