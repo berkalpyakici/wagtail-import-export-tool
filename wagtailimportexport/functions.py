@@ -54,19 +54,18 @@ def find_null_child_blocks(subfield, location, data):
 
     # Some fields do not have child_blocks, and we should not
     # investigate further if that's the case.
-    if not "child_blocks" in subfield.__dict__.keys():
-        continue
+    if "child_blocks" in subfield.__dict__.keys():
 
-    # Go through all fields.
-    for field_key, field_val in subfield.child_blocks.items():
+        # Go through all fields.
+        for field_key, field_val in subfield.child_blocks.items():
 
-        # We want to catch the ForeignKey
-        if isinstance(field_val, ForeignKey):
-            #TODO: Implement overwriting.
-            print(field_key, type(field_val), location)
-        
-        # Recursive Calls
-        find_null_child_blocks(field_val, location+[field_key], data)
+            # We want to catch the ForeignKey
+            if isinstance(field_val, ForeignKey):
+                # TODO: Implement overwriting.
+                print(field_key, type(field_val), location)
+            
+            # Recursive Calls
+            find_null_child_blocks(field_val, location+[field_key], data)
 
 def find_null_child_relations(subfield, location, data):
     """
@@ -85,22 +84,21 @@ def find_null_child_relations(subfield, location, data):
 
     # Some fields do not have related_model, and we should not
     # investigate further if that's the case.
-    if not "related_model" in subfield.__dict__.keys():
-        continue
+    if "related_model" in subfield.__dict__.keys():
 
-    # Go through all fields.
-    for field in subfield.related_model._meta.fields:
+        # Go through all fields.
+        for field in subfield.related_model._meta.fields:
 
-        # We want to catch the ForeignKey
-        if isinstance(field, ForeignKey):
-            if not location[0] in data:
-                continue
-            
-            for i, value in enumerate(data[location[0]]):
-                if not field.name in data[location[0]][i]:
+            # We want to catch the ForeignKey
+            if isinstance(field, ForeignKey):
+                if not location[0] in data:
                     continue
                 
-                data[location[0]][i][field.name] = None
+                for i, value in enumerate(data[location[0]]):
+                    if not field.name in data[location[0]][i]:
+                        continue
+                    
+                    data[location[0]][i][field.name] = None
 
 def null_fks(page, data):
     """
@@ -124,12 +122,10 @@ def null_fks(page, data):
             data[field.name] = None
 
         # StreamFields often have foreign keys associated with them.
-        # TODO: Make sure that we can catch all foreign keys within streamblocks.
         if(isinstance(field, StreamField)):
             find_null_child_blocks(field.stream_block, [field.name], data)
 
         # Many to One relations often have foreign keys associated with them.
-        # TODO: Make sure that we can catch all foreign keys within streamblocks.
         if(isinstance(field, ManyToOneRel)):
             find_null_child_relations(field, [field.name], data)
         
