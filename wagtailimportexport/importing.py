@@ -79,10 +79,10 @@ def import_page(uploaded_archive, parent_page):
                         if not filedata:
                             continue
 
-                        local_file_query = get_fileobject(filedata["file"], Document)
+                        local_file_query = get_fileobject(filedata["file"].split("/")[-1], Document)
                         
                         local_file_id = local_file_query if local_file_query else create_fileobject(
-                            filedata["file"], contents_mapping[filedata["file"]], Document)
+                            filedata["title"], contents_mapping[filedata["file"]], Document)
 
                         new_field_datas[fieldname] = local_file_id
                     
@@ -95,10 +95,10 @@ def import_page(uploaded_archive, parent_page):
                         if not filedata:
                             continue
 
-                        local_file_query = get_fileobject(filedata["file"]["name"], Image)
+                        local_file_query = get_fileobject(filedata["file"]["name"].split("/")[-1], Image)
                         
                         local_file_id = local_file_query if local_file_query else create_fileobject(
-                            filedata["file"]["name"], contents_mapping[filedata["file"]["name"]], Image)
+                            filedata["title"], contents_mapping[filedata["file"]["name"]], Image)
 
                         new_field_datas[fieldname] = local_file_id
 
@@ -151,7 +151,7 @@ def import_page(uploaded_archive, parent_page):
                     update_page_references(specific_page, pages_by_original_id)
                     specific_page.save()
 
-            return (len(contents), len(existing_pages), "")
+            return (len(contents)-len(existing_pages), len(existing_pages), "")
 
         except LookupError as e:
             # If content.json does not exist, then return the error,
@@ -236,9 +236,9 @@ def create_fileobject(title, uploaded_file, objtype):
 
             # Create the file object based on objtype.
             if objtype == File:
-                filedata = File(mf)
+                filedata = File(mf, name=mf.name.split("/")[-1])
             elif objtype == Image:
-                filedata = ImageFile(mf)
+                filedata = ImageFile(mf, name=mf.name.split("/")[-1])
             else:
                 return None
 
@@ -258,6 +258,14 @@ def create_fileobject(title, uploaded_file, objtype):
 
 def update_page_references(model, pages_by_original_id):
     """
+    Updates the page references recursively.
+
+    Arguments:
+    model --
+    pages_by_original_id --
+
+    Returns:
+    N/A. Overwrites model attributes.
 
     """
 

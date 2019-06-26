@@ -17,7 +17,8 @@ INSTALLED_APPS = [
 ```
 
 ## Known Limitations
-Page models should be consistent across both source and destination environments. Otherwise, importing may fail due to mismatching fields.
+* Page models should be consistent across both source and destination environments. Otherwise, importing may fail due to mismatching fields.
+* Exporting snippets is not implemented yet.
 
 ## Credits
-This project is based on [torchbox/wagtail-import-export](https://github.com/torchbox/wagtail-import-export). As they use the same Django application name, both cannot run.
+This project is based on [torchbox/wagtail-import-export](https://github.com/torchbox/wagtail-import-export). Because they use the same Django application name, both cannot be used on the same project at the same time.
