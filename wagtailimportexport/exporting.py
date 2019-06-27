@@ -14,6 +14,7 @@ from wagtail.images.models import Image
 from wagtail.documents.models import Document
 
 from wagtailimportexport import functions
+from wagtailimportexport.config import app_settings
 
 
 def export_page(settings = {'root_page': None, 'export_unpublished': False, 
@@ -127,7 +128,21 @@ def list_fileobjects(page, settings, objtype):
     for field in page._meta.get_fields():
         if field.related_model and str(field.related_model) == related_model_by:
             if data[field.name]:
-                objects[field.name] = instance_to_data(objtype.objects.get(pk=data[field.name]), null_users=settings['null_users'])
+
+                try:
+                    # Get the object instance.
+                    instance = objtype.objects.get(pk=data[field.name])
+
+                    # Null the object if the filesize is larger.
+                    if instance.file.size > app_settings['max_file_size'] and settings['ignore_large_files']:
+                        objects[field.name] = None
+                    else:
+                        objects[field.name] = instance_to_data(instance, null_users=settings['null_users'])
+
+                except (FileNotFoundError, objtype.DoesNotExist):
+                    logging.error("File for "+str(field.name)+" is not found on the environment, skipping.")
+                    objects[field.name] = None
+
             else:
                 objects[field.name] = None
     

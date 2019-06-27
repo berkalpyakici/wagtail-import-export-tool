@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="wagtail-import-export-tool",
-    version="0.9.1",
+    version="0.9.2",
     author="Berk Alp Yakici",
     author_email="contact@berkalpyakici.com",
     description="Import/Export tool for Wagtail CMS (built on top of Django), that supports pages, images, documents, and snippets.",

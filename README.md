@@ -16,6 +16,9 @@ INSTALLED_APPS = [
 ]
 ```
 
+## Config
+App settings can be found in `wagtailimportexport/config.py` file.
+
 ## Known Limitations
 * Page models should be consistent across both source and destination environments. Otherwise, importing may fail due to mismatching fields.
 * Exporting snippets is not implemented yet.

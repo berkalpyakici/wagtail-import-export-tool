@@ -172,7 +172,7 @@ def zip_contents(page_contents):
                         with file_storage.open(filename, 'rb') as f:
                             zf.writestr(filename, f.read())
                     except FileNotFoundError:
-                        logging.error("File "+filename+" is not found on local file storage and was not exported.")
+                        logging.error("File "+str(filename)+" is not found on local file storage and was not exported.")
 
                 
                 # Export all the documents.
@@ -180,13 +180,13 @@ def zip_contents(page_contents):
                     if not doc_def:
                         continue
                     
-                    filename = doc_def['file']
+                    filename = doc_def['file']['name']
 
                     try:
                         with file_storage.open(filename, 'rb') as f:
                             zf.writestr(filename, f.read())
                     except FileNotFoundError:
-                        logging.error("File "+filename+" is not found on local file storage and was not exported.")
+                        logging.error("File "+str(filename)+" is not found on local file storage and was not exported.")
         
         with open(zfname, 'rb') as zf:
             fd = zf.read()
