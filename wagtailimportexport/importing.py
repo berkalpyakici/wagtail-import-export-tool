@@ -79,10 +79,10 @@ def import_page(uploaded_archive, parent_page):
                         if not filedata:
                             continue
 
-                        local_file_query = get_fileobject(filedata["file"].split("/")[-1], Document)
+                        local_file_query = get_fileobject(filedata["file"]["name"].split("/")[-1], Document)
                         
                         local_file_id = local_file_query if local_file_query else create_fileobject(
-                            filedata["title"], contents_mapping[filedata["file"]], Document)
+                            filedata["title"], contents_mapping[filedata["file"]["name"]], Document)
 
                         new_field_datas[fieldname] = local_file_id
                     
