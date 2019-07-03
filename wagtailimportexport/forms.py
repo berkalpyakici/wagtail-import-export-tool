@@ -46,6 +46,14 @@ class ExportPage(forms.Form):
         help_text=_("If True, unpublished pages will be exported along with published pages."),
     )
 
+    null_pk = forms.BooleanField(
+        widget=forms.HiddenInput(),
+        required = False,
+        initial=False,
+        label=_("Remove Primary Keys"),
+        help_text=_("This is set to False as default and can be changed in code. Changing to True may break import functionality."),
+    )
+
     null_fk = forms.BooleanField(
         initial=True,
         required=False,

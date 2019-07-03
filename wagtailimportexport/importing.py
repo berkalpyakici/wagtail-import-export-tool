@@ -18,7 +18,7 @@ from wagtail.documents.models import Document
 from wagtailimportexport import functions
 
 
-def import_page(uploaded_archive, parent_page):
+def import_page(uploaded_archive, parent_page, overwrites = {}):
     """
     Imports uploaded_archive as children of parent_page.
 
@@ -55,7 +55,7 @@ def import_page(uploaded_archive, parent_page):
                 contents_mapping = functions.unzip_contents(zf)
 
                 # Get the list of pages to skip.
-                existing_pages = list_existing_pages(contents)
+                existing_pages = list_existing_pages(contents) if not overwrites else []
                 
                 # Dictionaries to store original paths.
                 pages_by_original_path = {}
@@ -106,6 +106,10 @@ def import_page(uploaded_archive, parent_page):
                     for (field, new_value) in new_field_datas.items():
                         page_record['content'][field] = new_value
                 
+                    # Misc. overwrites
+                    for (field, new_value) in overwrites.items():
+                        page_record['content'][field] = new_value
+
                     # Create page instance.
                     page = Page.from_serializable_data(page_record['content'])
 
