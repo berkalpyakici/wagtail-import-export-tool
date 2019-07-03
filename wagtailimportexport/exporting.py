@@ -64,10 +64,6 @@ def export_page(settings = {'root_page': None, 'export_unpublished': False,
             # Get list (and metadata) of images and documents to be exported.            
             images = list_fileobjects(page, settings, Image) if settings['export_images'] else []
             documents = list_fileobjects(page, settings, Document) if settings['export_documents'] else []
-            
-            # Remove PKs
-            if settings['null_pk']:
-                functions.null_pks(page, data)
 
             # Remove FKs
             if settings['null_fk']:

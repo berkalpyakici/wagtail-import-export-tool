@@ -142,7 +142,7 @@ def import_page(uploaded_archive, parent_page):
                         logging.error("Importing file failed because the model "+page_record['model']+" does not exist on this environment.")
                         return (0, 1, "Importing file failed because the model "+page_record['model']+" does not exist on this environment.")
 
-                    specific_page = model.from_serializable_data(page_record['content'], check_fks=True, strict_fks=False)
+                    specific_page = model.from_serializable_data(page_record['content'], check_fks=False, strict_fks=False)
 
                     base_page = pages_by_original_id[specific_page.id]
                     specific_page.page_ptr = base_page

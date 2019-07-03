@@ -46,13 +46,6 @@ class ExportPage(forms.Form):
         help_text=_("If True, unpublished pages will be exported along with published pages."),
     )
 
-    null_pk = forms.BooleanField(
-        initial=True,
-        required=False,
-        label=_("Remove Primary Keys"),
-        help_text=_("If True, primary keys will be nulled. Leave checked if exported archive will be imported to a different environment."),
-    )
-
     null_fk = forms.BooleanField(
         initial=True,
         required=False,
