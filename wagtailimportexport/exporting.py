@@ -19,7 +19,7 @@ from wagtailimportexport.config import app_settings
 
 def export_page(settings = {'root_page': None, 'export_unpublished': False, 
     'export_documents': False, 'export_images': False, 'null_pk': False,
-    'null_fk': False
+    'null_fk': False, 'null_users': False
     }):
     """
     Exports the root_page as well as its children (if the setting is set).
@@ -62,8 +62,12 @@ def export_page(settings = {'root_page': None, 'export_unpublished': False,
             data = json.loads(page.to_json())
 
             # Get list (and metadata) of images and documents to be exported.            
-            images = list_fileobjects(page, settings, Image) if settings['export_images'] else []
-            documents = list_fileobjects(page, settings, Document) if settings['export_documents'] else []
+            images = list_fileobjects(page, settings, Image) if settings['export_images'] else {}
+            documents = list_fileobjects(page, settings, Document) if settings['export_documents'] else {}
+
+            # Remove PKs
+            if settings['null_pk']:
+                functions.null_pks(page, data)
 
             # Remove FKs
             if settings['null_fk']:
